@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
      
-    //  change main tablet and effection(on )
+    ////////////////////// change main tablet and effection(on ) ////////////////////////
 
     const tabs = document.querySelectorAll(".tabheader__item"),
           tabsContent = document.querySelectorAll(".tabcontent"),
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	});
 
 
-    // Time 
+    //////////////////////// Time /////////////////////////////////////////
 
     const deadline = "2024-12-11";
 
@@ -106,7 +106,58 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setClock('.timer', deadline);
+
+    /////////////////////// ModalWindow ///////////////////////////////
+
+    const modalTrigger = document.querySelectorAll("[data-modal]"),
+          modal = document.querySelector(".modal"),
+          modalCloseBtn = document.querySelector("[data-close]");
+
+
+    function openModal() {
+        modal.classList.add("show");
+        modal.classList.remove("hide");
+        // modal.classList.toggle("show");
+        document.body.style.overflow = "hidden";
+        clearInterval(setTimerModal);
+    }
+    
+    modalTrigger.forEach( (btn) => {
+        btn.addEventListener("click", openModal);
+    });
+    
+    function closeModal() {
+        modal.classList.add("hide");
+        modal.classList.remove("show");
+        // modal.classList.toggle("show");
+        document.body.style.overflow = "";
+    }
+
+    modalCloseBtn.addEventListener("click", closeModal);
+
+
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+
+    document.addEventListener("keydown", (e) => {
+      if  (e.code === "Escape" && modal.classList.contains("show")) {
+        closeModal();
+      }
+    });
+
+    const setTimerModal = setTimeout(openModal, 10000);
+
+    function showModalByScroll() {
+        if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight -0.6) {
+            openModal();
+            window.removeEventListener("scroll", showModalByScroll);
+        }
+    }
+
+    window.addEventListener("scroll", showModalByScroll);
+
 });
-
-
-
