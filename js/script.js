@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    const setTimerModal = setTimeout(openModal, 10000);
+    // const setTimerModal = setTimeout(openModal, 10000);
 
     function showModalByScroll() {
         if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight -0.6) {
@@ -161,3 +161,4 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("scroll", showModalByScroll);
 
 });
+
