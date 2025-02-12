@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     //////////////////////// Time /////////////////////////////////////////
 
-    const deadline = "2024-12-11";
+    const deadline = "2025-01-29";
 
     function getTimeRemaning(endtime) {
         let days, hours, minutes, seconds;
@@ -110,8 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /////////////////////// ModalWindow ///////////////////////////////
 
     const modalTrigger = document.querySelectorAll("[data-modal]"),
-          modal = document.querySelector(".modal"),
-          modalCloseBtn = document.querySelector("[data-close]");
+          modal = document.querySelector(".modal");
 
 
     function openModal() {
@@ -133,11 +132,8 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.style.overflow = "";
     }
 
-    modalCloseBtn.addEventListener("click", closeModal);
-
-
     modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
+        if (e.target === modal || e.target.getAttribute("data-close") == "") {
             closeModal();
         }
     });
@@ -149,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // const setTimerModal = setTimeout(openModal, 10000);
+    const setTimerModal = setTimeout(openModal, 50000);
 
     function showModalByScroll() {
         if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight -0.6) {
@@ -160,5 +156,174 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener("scroll", showModalByScroll);
 
+    // Используем классы для карточек 
+    
+    class MenuCard {
+        constructor(src, alt, title, descr, price, parentSelector, ...classes) {
+            this.src = src;
+            this.alt = alt;
+            this.title = title;
+            this.descr = descr;
+            this.price = price;
+            this.classes = classes;
+            this.parent = document.querySelector(parentSelector);
+            this.transfer = 27;
+            this.changeToUAH();
+        }
+
+        changeToUAH() {
+            this.price = this.price * this.transfer;
+        }
+
+        render() {
+            const element = document.createElement("div");
+            
+            if (this.classes.length === 0) {
+                this.element = "menu__item";
+                element.classList.add(this.element);
+            } else {
+                this.classes.forEach(className => element.classList.add(className));
+            }
+ 
+            element.innerHTML = `          
+                <img src=${this.src} alt=${this.alt}>
+                <h3 class="menu__item-subtitle">${this.title}</h3>
+                <div class="menu__item-descr">${this.descr}</div>
+                <div class="menu__item-divider"></div>
+                <div class="menu__item-price">
+                    <div class="menu__item-cost">Цена:</div>
+                    <div class="menu__item-total"><span>${this.price}</span> грн/день</div>
+                </div>  
+            `;
+            this.parent.append(element);
+        }
+
+    }
+
+    const getResource = async (url) => {
+        const res = await fetch(url)
+
+        if (!res.ok) {
+            throw new Error(`Could not fetch ${url}, status: ${res.status}`);
+        }
+
+        return await res.json();
+    };
+
+    // getResource('http://localhost:3000/menu')
+    //     .then(data => {
+    //         data.forEach(({img, altimg, title, descr, price}) => {
+    //             new MenuCard(img, altimg, title, descr, price, ".menu .container").render();
+    //         });
+    //     })
+
+    getResource('http://localhost:3000/menu')
+        .then(data => createCard(data));
+
+    function createCard(data) {
+        data.forEach(({img, altimg, title, descr, price}) => {
+            const element = document.createElement('div');
+            
+            element.classList.add('menu__item');
+
+            element.innerHTML= `
+               <img src=${img} alt=${altimg}>
+                <h3 class="menu__item-subtitle">${title}</h3>
+                <div class="menu__item-descr">${descr}</div>
+                <div class="menu__item-divider"></div>
+                <div class="menu__item-price">
+                    <div class="menu__item-cost">Цена:</div>
+                    <div class="menu__item-total"><span>${price}</span> грн/день</div>
+                </div> 
+            `;
+
+            document.querySelector('.menu .container').append(element);
+        });
+    }
+
+    // Form
+
+    const forms = document.querySelectorAll("form");
+
+    const message = {
+        loading: "img/form/spinner.svg",
+        success: "Great! Soon, we call with you",
+        failure: "Oh!Oh! It's problem..."
+    }
+
+    forms.forEach(item => {
+        bindPostData(item);
+    });
+
+    const postData = async (url, data) => {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json"
+            },
+            body: data 
+        }); 
+
+        return await res.json();
+    };
+
+    function bindPostData(form) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            let statusMessage = document.createElement("img");
+            statusMessage.src = message.loading;
+            statusMessage.style.cssText = `
+                display: block;
+                margin: 0 auto;
+            `;
+            form.insertAdjacentElement("afterend", statusMessage);
+
+            const formData = new FormData(form);
+
+
+            const json = JSON.stringify(Object.fromEntries(formData.entries()));
+    
+            postData("http://localhost:3000/requests",  json)
+            .then(data => {
+                console.log(data);
+                showThanksModal(message.success);
+                statusMessage.remove();
+            }).catch(() => {
+                showThanksModal(message.failure);
+            }).finally(() => {
+                form.reset();
+            })
+        });
+    }
+
+    function showThanksModal(message) {
+        const prevModalDialog = document.querySelector(".modal__dialog");
+
+        prevModalDialog.classList.add("hide");
+        openModal();
+
+        const thanksModal = document.createElement("div");
+        thanksModal.classList.add("modal__dialog");
+        thanksModal.innerHTML = `
+            <div class="modal__content">
+                <div class="modal__close" data-close>×</div>
+                <div class="modal__title">${message}</div>
+                <div></div>
+            </div>
+        `;
+
+        document.querySelector(".modal").append(thanksModal);
+        setTimeout(() => {
+            thanksModal.remove();
+            prevModalDialog.classList.add("show");
+            prevModalDialog.classList.remove("hide");
+            closeModal();
+        }, 4000);
+    }
+
+    fetch("http://localhost:3000/menu")
+        .then(data => data.json())
+        .then(res => console.log(res));
 });
 
